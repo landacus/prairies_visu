@@ -30,7 +30,7 @@ async function setup() {
 
     // Charger le fichier Parquet via fetch
     console.log("Chargement du fichier data.parquet...");
-    const arrayBuffer = await response.fetchAndMerge();
+    const arrayBuffer = await fetchAndMerge();
     await db.registerFileBuffer('data.parquet', new Uint8Array(arrayBuffer));
 
     console.log("DuckDB prêt avec data.parquet chargé !");

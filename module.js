@@ -3,9 +3,13 @@ import { renderRegionalMap } from './init.js';
 import { renderDepartmentMap } from './dep.js';
 
 let conn;
-let posLevel = "region"; // "region" ou "departement"
-let zoomLevel = 1;
-let position = { x: 0, y: 0 };
+// Comportement de zoom partagé
+const zoomBehavior = d3.zoom()
+    .scaleExtent([1, 10]) // Zoom min 1x (taille normale), max 8x
+    .on("zoom", (event) => {
+        d3.select(".map-content").attr("transform", event.transform);
+        d3.selectAll(".region, .department").attr("stroke-width", 1 / event.transform.k);
+    });
 
 /**
  * INITIALISATION (Le "Setup")
@@ -51,33 +55,36 @@ export async function query(sql) {
 }
 
 async function changeView(scale) {
+    // Sauvegarder la transformation actuelle avant de changer de vue
     const svgElement = d3.select("#france-map").node();
-    
     const currentTransform = d3.zoomTransform(svgElement);
+    console.log("Transform actuel avant changement de vue :", currentTransform);
 
     if (scale === 'regions') {
+        console.log("Changement de vue : Régions");
         await renderRegionalMap();
-    } else {
+    } else if (scale === 'departments') {
+        console.log("Changement de vue : Départements");
         await renderDepartmentMap();
     }
 
-    d3.select("#france-map")
-      .call(zoomBehavior.transform, currentTransform);
+    // Réappliquer la transformation après le changement de vue
+    d3.select("#france-map").call(zoomBehavior.transform, currentTransform);
 }
 
 
 /**
- * LOGIQUE DE VISUALISATION (le cerveau D3.js)
+ * LOGIQUE DE VISUALISATION
  */
 async function main() {
-    // On lance le setup une seule fois
     await setup();
 
     // On charge les données par défaut (par région)
     renderRegionalMap();
 
-    d3.select("#btn-regions").on("click", () => changeView("region"));
-    d3.select("#btn-depts").on("click", () => changeView("departement"));
+    d3.select("#btn-regions").on("click", () => changeView("regions"));
+    d3.select("#btn-depts").on("click", () => changeView("departments"));
+    
 }
 
 // Lancement de l'application au chargement de la page

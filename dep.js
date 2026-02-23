@@ -1,5 +1,6 @@
 import { query } from "./module.js";
 import { showDetails } from "./init.js";
+import { renderCommuneMap } from "./communes.js";
 
 async function fetchDepartmentData() {
     const sql = `
@@ -52,12 +53,12 @@ export async function renderDepartmentMap() {
         // MÊME ÉCHELLE DE COULEUR QUE DANS INIT.JS
         const altitudes = stats.map(d => Number(d.alt_moyenne));
         
-        const colorScale = d3.scaleSequential(d3.interpolateViridis)
+        const colorScale = d3.scaleSequential(d3.interpolateReds)
                              .domain([Math.min(...altitudes), Math.max(...altitudes)]);
 
-        // Configuration du zoom (comme dans init.js)
+        // Configuration du zoom partagé
         const zoom = d3.zoom()
-            .scaleExtent([1, 8])
+            .scaleExtent([1, 10]) // Zoom min 1x (taille normale), max 10x
             .on("zoom", (event) => {
                 g.attr("transform", event.transform);
                 g.selectAll(".department").attr("stroke-width", 1 / event.transform.k);
@@ -78,10 +79,31 @@ export async function renderDepartmentMap() {
            })
            .attr("stroke", "#fff")
            .attr("stroke-width", 1)
-           .on("click", (event, d) => {
+           .on("mouseover", (event, d) => {
                const code = String(d.properties.code);
                const depData = dataMap.get(code);
                 showDetails(d.properties.nom, depData);
+           })
+           .on("click", (event, d) => {
+               const code = String(d.properties.code);
+               // On zoom sur le département cliqué
+               const [[x0, y0], [x1, y1]] = pathGenerator.bounds(d);
+               const dx = x1 - x0;
+               const dy = y1 - y0;
+               const x = (x0 + x1) / 2;
+               const y = (y0 + y1) / 2;
+               const scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height)));
+               const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+               svg.transition()
+                  .duration(750)
+                  .call(
+                      zoom.transform,
+                      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+                  );
+
+               // Afficher les communes du département
+                renderCommuneMap('departement', code);
            });
 
     } catch (err) {

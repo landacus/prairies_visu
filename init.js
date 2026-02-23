@@ -1,4 +1,5 @@
 import { query } from './module.js';
+import { renderCommuneMap } from "./communes.js";
 
 /**
  * FONCTION DE CHARGEMENT DES DONNÉES INITIALES
@@ -72,19 +73,16 @@ export async function renderRegionalMap() {
     console.log("Altitudes :", altitudes);
     console.log("Min :", Math.min(...altitudes), "Max :", Math.max(...altitudes));
     
-    const colorScale = d3.scaleSequential(d3.interpolateViridis)
+    const colorScale = d3.scaleSequential(d3.interpolateReds)
                          .domain([Math.min(...altitudes), Math.max(...altitudes)]);
 
     console.log("ColorScale créée");
 
     // Configuration du zoom
     const zoom = d3.zoom()
-    .scaleExtent([1, 8]) // Zoom min 1x (taille normale), max 8x
+    .scaleExtent([1, 8]) 
     .on("zoom", (event) => {
-        // Applique la transformation (translation et échelle) au groupe <g>
         g.attr("transform", event.transform);
-        
-        // Optionnel : ajuster l'épaisseur du trait pour qu'il ne grossisse pas trop
         g.selectAll(".region").attr("stroke-width", 1 / event.transform.k);
     });
 
@@ -104,7 +102,7 @@ export async function renderRegionalMap() {
            return regData ? colorScale(regData.alt_moyenne) : "#eee";
        })
        .attr("stroke", "#fff")
-       .on("click", (event, d) => {
+       .on("mouseover", (event, d) => {
            if (!d?.properties) return;
            const code = String(d.properties.code);
            const regData = dataByRegion.get(code);
@@ -112,7 +110,28 @@ export async function renderRegionalMap() {
                const nom = d.properties.nom;
                showDetails(nom, regData);
            }
-       });
+       })
+       .on("click", (event, d) => {
+               const code = String(d.properties.code);
+               // On zoom sur la région cliquée
+               const [[x0, y0], [x1, y1]] = pathGenerator.bounds(d);
+               const dx = x1 - x0;
+               const dy = y1 - y0;
+               const x = (x0 + x1) / 2;
+               const y = (y0 + y1) / 2;
+               const scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height)));
+               const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+               svg.transition()
+                  .duration(750)
+                  .call(
+                      zoom.transform,
+                      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+                  );
+
+               // Afficher les communes du département
+                renderCommuneMap('region', code);
+           });
 }
 
 export function showDetails(nom, data) {

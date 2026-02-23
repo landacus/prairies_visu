@@ -34,11 +34,32 @@ async function setup() {
 
     // Charger le fichier Parquet via fetch
     console.log("Chargement du fichier data.parquet...");
-    const response = await fetch('./data.parquet');
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await fetchAndMerge();
     await db.registerFileBuffer('data.parquet', new Uint8Array(arrayBuffer));
 
     console.log("DuckDB prêt avec data.parquet chargé !");
+}
+
+async function fetchAndMerge() {
+    const chunks = ['data.parquet.aa', 'data.parquet.ab', 'data.parquet.ac', 'data.parquet.ad'];
+    
+    // 1. Fetch all chunks in parallel
+    const promises = chunks.map(url => fetch(url).then(res => res.arrayBuffer()));
+    const buffers = await Promise.all(promises);
+
+    // 2. Calculate total size
+    const totalLength = buffers.reduce((acc, buf) => acc + buf.byteLength, 0);
+    const combinedArray = new Uint8Array(totalLength);
+
+    // 3. Manually copy each buffer into the giant array
+    let offset = 0;
+    for (const buf of buffers) {
+        combinedArray.set(new Uint8Array(buf), offset);
+        offset += buf.byteLength;
+    }
+
+    // Now 'combinedArray' has the magic bytes at the end and can be read
+    return combinedArray;
 }
 
 /**

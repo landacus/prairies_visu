@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Visualisation des prairies et des parcelles</title>
+
+        <style>
+            .region, .department { transition: fill 0.2s; cursor: pointer; }
+            .region:hover, .department:hover { fill-opacity: 0.8; stroke: #333; }
+        </style>
+
+    </head>
+    <body>
+        <script src="d3.v7.min.js"></script>
+        <script type="module" src="module.js"></script>
+        <script src="init.js"></script>
+        <script src="dep.js"></script>
+
+        <div id="dashboard" style="display: flex;">
+            <div class="controls">
+                <button id="btn-regions">Vue Régions</button>
+                <button id="btn-depts">Vue Départements</button>
+            </div>
+            <div id="map-container" style="flex: 2; position: relative;">
+                <svg id="france-map"></svg>
+                <div id="tooltip" style="position: absolute; opacity: 0; background: white; border: 1px solid #ccc; padding: 10px; pointer-events: none;"></div>
+            </div>
+
+            <div id="sidebar" style="flex: 1; padding: 20px; border-left: 1px solid #eee;">
+                <h2 id="entity-name">France</h2>
+                <div id="entity-stats">
+                    <p>Cliquez sur une partie de la carte pour voir les détails.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

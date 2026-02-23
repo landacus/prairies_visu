@@ -1,6 +1,6 @@
 import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.28.0/+esm';
-import { renderRegionalMap } from './init.js';
-import { renderDepartmentMap } from './dep.js';
+import { renderRegionalMap } from 'init.js';
+import { renderDepartmentMap } from 'dep.js';
 
 let conn;
 let posLevel = "region"; // "region" ou "departement"

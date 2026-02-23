@@ -30,7 +30,7 @@ async function setup() {
 
     // Charger le fichier Parquet via fetch
     console.log("Chargement du fichier data.parquet...");
-    const response = await fetch('./data.parquet');
+    const response = await fetch('https://github.com/landacus/prairies_visu/raw/refs/heads/main/data.parquet');
     const arrayBuffer = await response.arrayBuffer();
     await db.registerFileBuffer('data.parquet', new Uint8Array(arrayBuffer));
 
